@@ -10,25 +10,73 @@ public class PlayerScript : MonoBehaviour
     public float speed;
     public Text score;
     private int scoreValue = 0;
+    private int livesValue = 3;
+    public Text winText;
+    public Text scoreText;
+    public Text livesText;
+    private int lives;
+    public AudioSource musicSource;
+    public AudioClip musicClipTwo;
+    Animator anim;
+    private bool facingRight = true;
+    private bool gameOver;
+
     // Start is called before the first frame update
     void Start()
     {
         rd2d = GetComponent<Rigidbody2D>();
-        score.text = scoreValue.ToString();
+        score.text = "Score: " + scoreValue.ToString();
+        livesText.text = "Lives: " + livesValue.ToString();
+        winText.text = "" ;
+        anim = GetComponent<Animator>();
+        gameOver = false;
     }
 
     // Update is called once per frame 
     void FixedUpdate()
     {
         float hozMovement = Input.GetAxis("Horizontal");
+        if (hozMovement > 0)
+        {
+            anim.SetInteger("State", 1);
+        }
+        if (hozMovement < 0)
+        {
+            anim.SetInteger("State", 1);
+        }
+        if (hozMovement == 0)
+        {
+            anim.SetInteger("State", 0);
+        }
         float verMovement = Input.GetAxis("Vertical");
+        if (verMovement > 0)
+        {
+          anim.SetInteger("State", 2);
+        }
 
         rd2d.AddForce(new Vector2(hozMovement * speed, verMovement * speed));
+
+        if (facingRight == false && hozMovement > 0)
+        {
+            Flip();
+        }
+        else if (facingRight == true && hozMovement < 0)
+        {
+            Flip();
+        }
 
         if (Input.GetKey("escape"))
         {
         Application.Quit();
         }
+    }
+
+    void Flip()
+    {
+     facingRight = !facingRight;
+     Vector2 Scaler = transform.localScale;
+     Scaler.x = Scaler.x * -1;
+     transform.localScale = Scaler;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -37,8 +85,17 @@ public class PlayerScript : MonoBehaviour
         {
             scoreValue += 1;
             score.text = scoreValue.ToString();
+            SetScoreText ();
             Destroy(collision.collider.gameObject);
         }
+        if(collision.collider.tag == "Enemy")
+        {
+            livesValue -= 1;
+            livesText.text = livesValue.ToString();
+            SetScoreText ();
+            Destroy(collision.collider.gameObject);
+        }
+
     }
 
     private void OnCollisionStay2D(Collision2D collision)
@@ -51,4 +108,34 @@ public class PlayerScript : MonoBehaviour
             }
         }
     }
+
+    void SetScoreText()
+    {
+        score.text = "Score: " + scoreValue.ToString();
+        if (scoreValue ==4)
+        {
+            transform.position = new Vector2(57.5f, -1.0f);
+            livesValue = 3;
+        }
+        score.text = "Score: " + scoreValue.ToString();
+        
+        if (scoreValue ==8)
+        {
+            gameOver = true;
+            if (gameOver == true)
+            {
+                winText.text = "You Win!";
+                musicSource.clip = musicClipTwo;
+                musicSource.Play();
+            }
+        }
+
+        livesText.text = "Lives: " + livesValue.ToString();
+        if (livesValue <=0)
+        {
+            winText.text = "You Lose!";
+            Destroy(this.gameObject);
+        }
+    }
+    
 }
